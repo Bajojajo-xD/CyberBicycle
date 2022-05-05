@@ -1,7 +1,7 @@
 // ! <-- Include required libraries --> !
 
+
 #include <EEPROM.h>
-#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -25,27 +25,27 @@ int readFromEEPROM(int address)
 
 // ! <-- Settings --> !
 
-// Run RTC-setTime to set current time into RTC
+// Run Helpers/RTC-setTime to set current time into RTC
 
 int
 circMetric = 2148, // Wheel circumference (in milimeters)
 speedRefreshFrequency = 500, // How often refresh speed on LCD (in miliseconds)
 autoLightsRefreshFrequency = 5000, // How often refresh sensors info and change LEDs brightness and mode
 
-S11_onOffBtn = 16753245, S11_menu = 16769565, 
+S11_onOffBtn = 16753245, S11_menuBtn = 16769565, 
 S11_testBtn = 16720605, S11_plusBtn = 16712445, S11_backBtn = 16761405, 
 S11_prevBtn = 16769055, S11_startStopBtn = 16754775, S11_nextBtn = 16748655, 
 S11_0btn = 16738455, S11_minusBtn = 16750695, S11_clearBtn = 16756815, 
 S11_1btn = 16724175, S11_2btn = 16718055, S11_3btn = 16743045,
 S11_4btn = 16716015, S11_5btn = 16726215, S11_6btn = 16734885,
 S11_7btn = 16728765, S11_8btn = 16730805, S11_9btn = 16732845;
-// IR remote buttons, !! RUN "IR-check" to get values !!
+// IR remote buttons, !! RUN "Helpers/IR-check" to get values !!
 
 char 
-S7_address[8] = {0x28, 0xE8, 0x15, 0x48, 0xF6, 0x30, 0x3C, 0xA8}, // Temperature sensor address, !! RUN "TemperatureSensor-scan" to get it !!
+S7_address[8] = {0x28, 0xE8, 0x15, 0x48, 0xF6, 0x30, 0x3C, 0xA8}, // Temperature sensor address, !! RUN "Helpers/TemperatureSensor-scan" to get it !!
 
-F1_address = 0x3C,   // OLED Screen address, !! RUN "I2C-scan" to get your address !!
-F2_address = 0x27;   // LCD Screen address, !! RUN "I2C-scan" to get your address !!
+F1_address = 0x3C,   // OLED Screen address, !! RUN "Helpers/I2C-scan" to get your address !!
+F2_address = 0x27;   // LCD Screen address, !! RUN "Helpers/I2C-scan" to get your address !!
 
 // --> Settings <--
 
@@ -57,8 +57,6 @@ S1 = 3,    // Button 1
 S2 = 4,    // Button 2
 S3 = 5,    // Button 3
 S4 = 6,    // Button 4
-S5 = 6,    // Light detector
-S6 = 7,    // Rain/snow detector
 S7_pin = 7,// Temperature sensor
 S8 = 8,    // Reed switch - wheel
 S9 = 9,    // Reed switch - left
@@ -66,7 +64,9 @@ S10 = 10;  // Reed switch - right
 char
 Y1 = A0,     // Relay
 S11_pin = A1,// IR receiver
-VD1 = A2;    // Voltage check
+VD1 = A2,    // Voltage check
+S5 = A6,     // Light detector
+S6 = A7;     // Rain/snow detector
 
 // --> Define pins <--
 
@@ -101,7 +101,7 @@ H3_numOfLeds = 3;
 // Link F1 to OLED lib
 Adafruit_SSD1306 F1(F1_width, F1_height, &Wire, -1);
 
-// Link F2 to LiquidCrystal lib
+// Link F2 to hd44780 lib
 hd44780_I2Clcd F2(F2_address);    
 
  // Link RTC1 to VirtuabotixRTC lib  
@@ -143,7 +143,7 @@ void setup() {
   RTC1.updateTime(); // Init RTC1
   S11.enableIRIn();  // Enable IR receiver
 
-  pinMode(S1, INPUT); pinMode(S2, INPUT); pinMode(S3, INPUT); pinMode(S4, INPUT); pinMode(S8, INPUT); pinMode(S9, INPUT); pinMode(S10, INPUT); // Init inputs
+  pinMode(S1, INPUT_PULLUP); pinMode(S2, INPUT_PULLUP); pinMode(S3, INPUT_PULLUP); pinMode(S4, INPUT_PULLUP); pinMode(S8, INPUT_PULLUP); pinMode(S9, INPUT_PULLUP); pinMode(S10, INPUT_PULLUP); // Init inputs
   pinMode(Y1, OUTPUT); // Init outputs
   digitalWrite(Y1, LOW);  // Turn off USB port
 
@@ -224,7 +224,7 @@ void loop() {
 
   if(digitalRead(S8) != S8_lastState) {
     S8_lastState = digitalRead(S8);
-    if(digitalRead(S8) == HIGH) {
+    if(digitalRead(S8) != HIGH) {
       currentSpeed = (3.6 * circMetric) / (millis() - wheelRotationStart);  // Calculate speed
       if(currentSpeed > maxSpeed) maxSpeed = currentSpeed;
       wheelRotationStart = millis();  // Start counting to display 0km/h if idling and to calculate speed
@@ -267,7 +267,7 @@ void loop() {
   
   if(digitalRead(S4) != S4_lastState) {
     S4_lastState = digitalRead(S4);
-    if(digitalRead(S4) == HIGH) {
+    if(digitalRead(S4) != HIGH) {
       btnMode++;
       if(btnMode == 5) btnMode = 0; // BtnMode to 0 when there is no more modes
     }
@@ -284,13 +284,13 @@ void loop() {
       S1_lastState = digitalRead(S1);
       btnHoldCounter = 0;
       F1Refresh();
-      if(digitalRead(S1) == HIGH) {
+      if(digitalRead(S1) != HIGH) {
         // Button 1 clicked, start timer
         btnHoldCounter = millis();
       };
     };
     // Reset speedometer
-    if(digitalRead(S1) == HIGH && millis() - btnHoldCounter >= 3000) { // If holding for 3secs
+    if(digitalRead(S1) != HIGH && millis() - btnHoldCounter >= 3000) { // If holding for 3secs
       maxSpeed = 0; tripDist = 0; avgSpeed = 0; avgSpeedFirstElementScale = 0; avgSpeedPushToNum = 0; memset(avgSpeedArray, 0, sizeof(avgSpeedArray));
     }
 
@@ -298,11 +298,11 @@ void loop() {
     if(digitalRead(S2) != S2_lastState || digitalRead(S3) != S3_lastState) {
       S2_lastState = digitalRead(S2);
       S3_lastState = digitalRead(S3);
-      if(digitalRead(S2) == HIGH) {
+      if(digitalRead(S2) != HIGH) {
         speedometerMode++;
         if(speedometerMode == 4) speedometerMode = 0;
       }
-      else if(digitalRead(S2) == HIGH) {
+      else if(digitalRead(S2) != HIGH) {
         speedometerMode = speedometerMode - 1;
         if(speedometerMode == -1) speedometerMode = 3;
       };
@@ -330,7 +330,7 @@ void loop() {
     // Button 1
     if(digitalRead(S1) != S1_lastState) {
       S1_lastState = digitalRead(S1);
-      if(digitalRead(S1) == HIGH) {
+      if(digitalRead(S1) != HIGH) {
         // Turn main led on/off
         if(mainLedOn) {
           mainLedOn = false; 
@@ -343,7 +343,7 @@ void loop() {
     // Button 2
     if(digitalRead(S2) != S2_lastState) {
       S2_lastState = digitalRead(S2);
-      if(digitalRead(S2) == HIGH) {
+      if(digitalRead(S2) != HIGH) {
         // Change main led glow type
         mainLedGlowType++; xH1 = 0; mainLedAnimationCounter = millis();
       };
@@ -353,7 +353,7 @@ void loop() {
     // Button 3
     if(digitalRead(S3) != S3_lastState) {
       S3_lastState = digitalRead(S3);
-      if(digitalRead(S3) == HIGH) {
+      if(digitalRead(S3) != HIGH) {
         // Change main led brightness
         mainLedBrightness++; xH1 = 0; mainLedAnimationCounter = millis();
         if(mainLedBrightness == 5) mainLedBrightness = 0;
@@ -370,7 +370,7 @@ void loop() {
     // Button 1
     if(digitalRead(S1) != S1_lastState) {
       S1_lastState = digitalRead(S1);
-      if(digitalRead(S1) == HIGH && autoLights == false) {
+      if(digitalRead(S1) != HIGH && autoLights == false) {
         // Turn front led on/off
         if(frontLedOn) {
           frontLedOn = false; 
@@ -383,7 +383,7 @@ void loop() {
     // Button 2
     if(digitalRead(S2) != S2_lastState) {
       S2_lastState = digitalRead(S2);
-      if(digitalRead(S2) == HIGH && autoLights == false) {
+      if(digitalRead(S2) != HIGH && autoLights == false) {
         // Change front led glow type
         frontLedGlowType++; xH2 = 0; frontLedAnimationCounter = millis();
       };
@@ -393,7 +393,7 @@ void loop() {
     // Button 3
     if(digitalRead(S3) != S3_lastState) {
       S3_lastState = digitalRead(S3);
-      if(digitalRead(S3) == HIGH && autoLights == false) {
+      if(digitalRead(S3) != HIGH && autoLights == false) {
         // Change front led brightness
         frontLedBrightness++; xH2 = 0; frontLedAnimationCounter = millis();
         if(frontLedBrightness == 5) frontLedBrightness = 0;
@@ -410,7 +410,7 @@ void loop() {
     // Button 1
     if(digitalRead(S1) != S1_lastState) {
       S1_lastState = digitalRead(S1);
-      if(digitalRead(S1) == HIGH && autoLights == false) {
+      if(digitalRead(S1) != HIGH && autoLights == false) {
         // Turn back led on/off
         if(backLedOn) {
           backLedOn = false; 
@@ -423,7 +423,7 @@ void loop() {
     // Button 2
     if(digitalRead(S2) != S2_lastState) {
       S2_lastState = digitalRead(S2);
-      if(digitalRead(S2) == HIGH && autoLights == false) {
+      if(digitalRead(S2) != HIGH && autoLights == false) {
         // Change back led glow type
         backLedGlowType++; xH3 = 0; backLedAnimationCounter = millis();
       };
@@ -433,7 +433,7 @@ void loop() {
     // Button 3
     if(digitalRead(S3) != S3_lastState) {
       S3_lastState = digitalRead(S3);
-      if(digitalRead(S3) == HIGH && autoLights == false) {
+      if(digitalRead(S3) != HIGH && autoLights == false) {
         // Change back led brightness
         backLedBrightness++; xH3 = 0; backLedAnimationCounter = millis();
         if(backLedBrightness == 5) backLedBrightness = 0;
@@ -450,7 +450,7 @@ void loop() {
     // Button 1
     if(digitalRead(S1) != S1_lastState) {
       S1_lastState = digitalRead(S1);
-      if(digitalRead(S1) == HIGH) {
+      if(digitalRead(S1) != HIGH) {
         // Turn turn signals on/off
         if(turnSignals) {
           turnSignals = false; 
@@ -463,7 +463,7 @@ void loop() {
     // Button 2
     if(digitalRead(S2) != S2_lastState) {
       S2_lastState = digitalRead(S2);
-      if(digitalRead(S1) == HIGH) {
+      if(digitalRead(S1) != HIGH) {
         // Turn auto driving lights on/off
         if(autoLights) {
           autoLights = false; 
@@ -476,7 +476,7 @@ void loop() {
     // Button 3
     if(digitalRead(S3) != S3_lastState) {
       S3_lastState = digitalRead(S3);
-      if(digitalRead(S3) == HIGH) {
+      if(digitalRead(S3) != HIGH) {
         // Turn on/off USB port
         if(chargerActive) {
           chargerActive = false; 
@@ -499,7 +499,7 @@ void loop() {
     // Left signal    
     if(digitalRead(S9) != S9_lastState) {
       S9_lastState = digitalRead(S9);
-      if(digitalRead(S9) == HIGH) {
+      if(digitalRead(S9) != HIGH) {
         // Check if it was <400ms 2x click
         if(millis() - toogleLeftSignalCounter <= 400) {
           if(leftSignal) leftSignal = false;
@@ -516,7 +516,7 @@ void loop() {
     // Right signal
     if(digitalRead(S10) != S10_lastState) {
       S10_lastState = digitalRead(S10);
-      if(digitalRead(S10) == HIGH) {
+      if(digitalRead(S10) != HIGH) {
         // Check if it was <400ms 2x click
         if(millis() - toogleRightSignalCounter <= 400) {
           if(rightSignal) rightSignal = false;
@@ -531,7 +531,7 @@ void loop() {
     };      
 
     // Hazard lights
-    if(millis() - toogleLeftSignalCounter >= 2000 && millis() - toogleRightSignalCounter >= 2000 && digitalRead(S9) == HIGH && digitalRead(S10) == HIGH && hazardLights_lastState == LOW) {
+    if(millis() - toogleLeftSignalCounter >= 2000 && millis() - toogleRightSignalCounter >= 2000 && digitalRead(S9) != HIGH && digitalRead(S10) != HIGH && hazardLights_lastState == LOW) {
       hazardLights_lastState = HIGH;
       if(hazardLights) hazardLights = false;
       else {

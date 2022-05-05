@@ -27,11 +27,17 @@ void setup() {
 
 
   F1.begin(SSD1306_SWITCHCAPVCC, F1_address); // Init F1
-  F1.clearDisplay(); F1.setTextSize(2); F1.setTextColor(WHITE); F1.setCursor(20, 15); F1.println("Modules"); F1.setCursor(35, 35); F1.println("ready"); F1.display(); //Print Everything ready
   // --> Devices and pins init <--
 
 }
 
 void loop() {
-
+    F1.clearDisplay(); F1.setTextSize(2); F1.setTextColor(WHITE); F1.setCursor(20, 15); F1.println("Modules"); F1.setCursor(35, 35); F1.println("ready"); F1.display(); //Print Everything ready
+    delay(2000);
+    F1.clearDisplay(); F1.setCursor(10, 15); F1.println("Refreshing in:"); F1.setCursor(40, 35); F1.println("3..."); F1.display();
+    delay(1000);
+    F1.setCursor(40, 35); F1.println("2..."); F1.display();
+    delay(1000);
+    F1.setCursor(40, 35); F1.println("1..."); F1.display();
+    delay(1000);
 }
