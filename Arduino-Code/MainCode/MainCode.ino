@@ -36,15 +36,15 @@ char
 S7_address[8] = {0x28, 0xB1, 0x6D, 0xA1, 0x3, 0x0, 0x0, 0x11}, // Temperature sensor address, !! RUN "TemperatureSensor-scan" to get it !!
 
 F1_address = 0x3C,   // OLED Screen address, !! RUN "I2C-scan" to get your address !!
-F2_address = 0x27;//,   // LCD Screen address, !! RUN "I2C-scan" to get your address !!
+F2_address = 0x27,   // LCD Screen address, !! RUN "I2C-scan" to get your address !!
 
-//S11_onOffBtn = , S11_menu = , 
+S11_onOffBtn, //;S11_menu = , 
 //S11_testBtn = , S11_plusBtn = , S11_backBtn = , 
 //S11_prevBtn = , S11_startStopBtn = , S11_nextBtn = , 
-//S11_0btn = , S11_minusBtn = , S11_clearBtn = , 
+S11_0btn; //S11_minusBtn = , S11_clearBtn = , 
 //S11_1btn = , S11_2btn = , S11_3btn = ,
 //S11_4btn = , S11_5btn = , S11_6btn = ,
-//S11_7btn = , S11_8btn = , S11_9btn = ;
+//S11_7btn = , S11_8btn = , S11_9btn = ,
 // IR remote buttons, !! RUN "IR-check" to get values !!
 
 // --> Settings <--
@@ -118,7 +118,7 @@ DallasTemperature S7(&onewire);
 
 // Link S11 to IRremote lib
 IRrecv S11(S11_pin); 
-decode_results (S11_results);
+decode_results S11_results;
 
 // --> Communication-needed devices settings <--
 
@@ -139,13 +139,13 @@ void setup() {
   H1.begin(); H2.begin(); H3.begin(); 
   H1.clear(); H2.clear(); H3.clear();
 
-  S7.begin();        // Init S7
+  S7.begin();        // Init S7 (Temp sensor)
   RTC1.updateTime(); // Init RTC1
   S11.enableIRIn();  // Enable IR receiver
 
   pinMode(S1, INPUT); pinMode(S2, INPUT); pinMode(S3, INPUT); pinMode(S4, INPUT); pinMode(S8, INPUT); pinMode(S9, INPUT); pinMode(S10, INPUT); // Init inputs
   pinMode(Y1, OUTPUT); // Init outputs
-  digitalWrite(Y1, LOW);  // Turn off relay
+  digitalWrite(Y1, LOW);  // Turn off USB port
 
   delay(1000);
   F2.setCursor(0,1); F2.print("Modules ready"); // Print F2 is ready
@@ -157,7 +157,7 @@ void setup() {
 // ! <-- Define useful vars --> !
 
 float
-wheelRotationStart = (3.6 * circMetric), tripDist = readFromEEPROM(10), btnHoldCounter = 0, speedToZeroCounter = 0, speedRefreshCounter = 0, autoLightsRefreshCounter = 0, toogleLeftSignalCounter = 0, toogleRightSignalCounter = 0, turnSignalAnimationCounter = 0, frontLedAnimationCounter = 0, backLedAnimationCounter = 0, mainLedAnimationCounter = 0,
+wheelRotationStart = (3.6 * circMetric), tripDist = readFromEEPROM(10), totalDist = readFromEEPROM(50), btnHoldCounter = 0, speedRefreshCounter = 0, autoLightsRefreshCounter = 0, toogleLeftSignalCounter = 0, toogleRightSignalCounter = 0, turnSignalAnimationCounter = 0, frontLedAnimationCounter = 0, backLedAnimationCounter = 0, mainLedAnimationCounter = 0,
 avgSpeedArray[9];
 
 int 
@@ -167,13 +167,16 @@ lightLevel, rainLevel,
 btnMode = 0, speedometerMode = 0, 
 mainLedGlowType = 0, backLedGlowType = 0, frontLedGlowType = 0,
 mainLedBrightness = 0, backLedBrightness = 0, frontLedBrightness = 0, xH1 = 0, xH2 = 0, xH3 = 0,
-currentSpeed, maxSpeed = readFromEEPROM(20), avgSpeed = readFromEEPROM(30), avgSpeedFirstElementScale = readFromEEPROM(40), avgSpeedPushToNum = 0, totalDist = readFromEEPROM(50);
+currentSpeed, maxSpeed = readFromEEPROM(20), avgSpeed = readFromEEPROM(30), avgSpeedFirstElementScale = readFromEEPROM(40), avgSpeedPushToNum = 0;
 
 bool 
 chargerActive = false,
 mainLedOn = false, backLedOn = false, frontLedOn = false, 
 leftSignal = false, rightSignal = false, hazardLights = false,
 turnSignals = true, autoLights = true;
+
+char
+S11_lastBtn;
 
 //Display info on F1
 void F1Refresh() {
@@ -224,36 +227,34 @@ void loop() {
 
   if(digitalRead(S8) != S8_lastState) {
     S8_lastState = digitalRead(S8);
-    speedToZeroCounter = millis();
     if(digitalRead(S8) == HIGH) {
-      currentSpeed = (3.6 * circMetric) / (millis() - wheelRotationStart);
+      currentSpeed = (3.6 * circMetric) / (millis() - wheelRotationStart);  // Calculate speed
       if(currentSpeed > maxSpeed) maxSpeed = currentSpeed;
-      wheelRotationStart = millis();
-      speedToZeroCounter = 0;
+      wheelRotationStart = millis();  // Start counting to display 0km/h if idling and to calculate speed
       tripDist = tripDist + (circMetric / 1000);
-      totalDist = int(totalDist + (circMetric / 1000));
+      totalDist = totalDist + (circMetric / 1000);
       if(currentSpeed > 1) {
-        avgSpeedArray[avgSpeedPushToNum + 1] = currentSpeed;
-        avgSpeed = ((avgSpeedFirstElementScale * avgSpeedArray[0]) + avgSpeedArray[1] + avgSpeedArray[2] + avgSpeedArray[3] + avgSpeedArray[4] + avgSpeedArray[5] + avgSpeedArray[6] + avgSpeedArray[7] + avgSpeedArray[8]) / (avgSpeedFirstElementScale + 8);
-        if(avgSpeedArray[9]) {
-          avgSpeedArray[0] = (avgSpeed * 9) + avgSpeedArray[9] / 10;
-          avgSpeedFirstElementScale = avgSpeedFirstElementScale + 8;
-          avgSpeedPushToNum = 0;
-          avgSpeedArray[9] = 0;
+        avgSpeedArray[avgSpeedPushToNum + 1] = currentSpeed; // Add speed to avg array
+        avgSpeed = ((avgSpeedFirstElementScale * avgSpeedArray[0]) + avgSpeedArray[1] + avgSpeedArray[2] + avgSpeedArray[3] + avgSpeedArray[4] + avgSpeedArray[5] + avgSpeedArray[6] + avgSpeedArray[7] + avgSpeedArray[8]) / (avgSpeedFirstElementScale + 8); // Calculate avg speed
+        if(avgSpeedArray[9]) { // If last place in avg speed array filled
+          avgSpeedArray[0] = (avgSpeed * 9) + avgSpeedArray[9] / 10; // Calculate avg and paste as first array item
+          avgSpeedFirstElementScale = avgSpeedFirstElementScale + 8; // Change weight of that item
+          avgSpeedPushToNum = 0; // Say program to push into first array element again
+          avgSpeedArray[9] = 0; // Clear last element
         }
       };
     };
   };
-  if(millis() - speedToZeroCounter >= 2000) {
-      currentSpeed = 0;
-      wheelRotationStart = (3.600 * circMetric);
+  if(millis() - wheelRotationStart >= 2000) { // If wheel idling for more than 2 secs
+      currentSpeed = 0; // Speed to zero
+      wheelRotationStart = 0; // To provide calculating speed gives < 1 km/h
     }
   // --> Wheel rotate detect, calculate and refresh speed <--
   
   // ! <-- Refresh speed on lcd and send data to EEPROM --> !
-  if(millis() - speedRefreshCounter >= speedRefreshFrequency) {
+  if(millis() - speedRefreshCounter >= speedRefreshFrequency) { // 2 seconds delay
     speedRefreshCounter = millis();
-    F2.setCursor(0,0); F2.print(currentSpeed); F2.print(" km/h"); F2.setCursor(9, 0); F2.print("| "); F2.print(int(S7.getTempCByIndex(0))); F2.print(" °C"); F2.display();
+    F2.setCursor(0,0); F2.print(currentSpeed); F2.print(" km/h"); F2.setCursor(9, 0); F2.print("| "); F2.print(int(S7.getTempCByIndex(0))); F2.print(" °C"); F2.display(); // Print temp and speed
     // Store info in EEPROM
     if(readFromEEPROM(50) != totalDist) writeIntoEEPROM(50, totalDist);  
     if(readFromEEPROM(40) != avgSpeedFirstElementScale) writeIntoEEPROM(40, avgSpeedFirstElementScale);
@@ -271,7 +272,7 @@ void loop() {
     S4_lastState = digitalRead(S4);
     if(digitalRead(S4) == HIGH) {
       btnMode++;
-      if(btnMode == 5) btnMode = 0;
+      if(btnMode == 5) btnMode = 0; // BtnMode to 0 when there is no more modes
     }
     F1Refresh();
   };
@@ -292,7 +293,7 @@ void loop() {
       };
     };
     // Reset speedometer
-    if(digitalRead(S1) == HIGH && millis() - btnHoldCounter >= 3000) {
+    if(digitalRead(S1) == HIGH && millis() - btnHoldCounter >= 3000) { // If holding for 3secs
       maxSpeed = 0; tripDist = 0; avgSpeed = 0; avgSpeedFirstElementScale = 0; avgSpeedPushToNum = 0; memset(avgSpeedArray, 0, sizeof(avgSpeedArray));
     }
 
@@ -508,6 +509,7 @@ void loop() {
           else if(!hazardLights){
             leftSignal = true; H2.clear(); H3.clear(); rightSignal = false; turnSignalAnimationCounter = millis(); xH1 = 0; xH2 = 0; xH3 = 0;
           };
+          F1Refresh();
         };
         toogleLeftSignalCounter = millis();
         hazardLights_lastState = LOW;
@@ -524,6 +526,7 @@ void loop() {
           else if(!hazardLights) {
             H2.clear(); H3.clear(); rightSignal = true; leftSignal = false; turnSignalAnimationCounter = millis(); xH1 = 0; xH2 = 0; xH3 = 0;
           };
+          F1Refresh();
         };
         toogleRightSignalCounter = millis();
         hazardLights_lastState = LOW;
@@ -537,30 +540,49 @@ void loop() {
       else {
         H2.clear(); H3.clear(); hazardLights = true; rightSignal = false; leftSignal = false; turnSignalAnimationCounter = millis(); xH1 = 0; xH2 = 0; xH3 = 0;
       };
+      F1Refresh();
     };    
   }    
   // --> Toogle turn signals <--   
 
   // ! <-- IR receiver --> !
-
-
-
-
+  
+  
+  if(S11.decode(&S11_results)) { // Decode
+    if(S11_results.value != S11_lastBtn) { // If it's not just hold
+      if(S11_results.value == S11_onOffBtn) {
+        // Turn main led on/off
+        if(mainLedOn) {
+          mainLedOn = false; 
+        }
+        else mainLedBrightness = 2; mainLedGlowType = 0; mainLedOn = true; xH1 = 0; mainLedAnimationCounter = millis();        
+      }
+      else if (S11_results.value == S11_0btn) {
+        mainLedGlowType = 0; xH1 = 0; mainLedAnimationCounter = millis();        
+      }
+      F1Refresh();
+    }
+    S11.resume();
+    S11_lastBtn = S11_results.value;
+  }
   // --> IR receiver <--
 
   // ! <-- Auto driving lights --> !
 
 
-  if(autoLights && millis() - autoLightsRefreshCounter >= autoLightsRefreshFrequency) {
+  if(autoLights && millis() - autoLightsRefreshCounter >= autoLightsRefreshFrequency) { // Delay
     autoLightsRefreshCounter = millis();
-    lightLevel = (1023-analogRead(S5))/10.23;
-    rainLevel = analogRead(S6)/10.23;
+    lightLevel = (1023-analogRead(S5))/10.23; // Check light level (in %)
+    rainLevel = analogRead(S6)/10.23;         // Check rain/snow level (in %)
+    // It's dark
     if(lightLevel < 10) {
       frontLedOn = true; backLedOn = true; frontLedBrightness = 4; backLedBrightness = 4; frontLedGlowType = 0; backLedGlowType = 0;    
     }
+    // It's a little dark or it's raining
     else if(lightLevel < 60 || rainLevel > 5) {
       frontLedOn = true; backLedOn = true; frontLedBrightness = 2; backLedBrightness = 2; frontLedGlowType = 1; backLedGlowType = 1;     
     }
+    // It's light and not raining
     else {
       frontLedOn = false; backLedOn = false;
     }
@@ -573,27 +595,27 @@ void loop() {
   if(mainLedOn) {
     if(mainLedGlowType == 0) {
       for(int i=0; i < H1_numOfLeds; i++) {
-        H1.setPixelColor(i, H1.Color((mainLedBrightness * 50) + 55, (mainLedBrightness * 50) + 55, (mainLedBrightness * 50) + 55));
+        H1.setPixelColor(i, H1.Color(255, 255, 255));
       };
     }
     else if(mainLedGlowType == 1) {
       for(int i=0; i < H1_numOfLeds; i++) {
-        H1.setPixelColor(i, H1.Color((mainLedBrightness * 50) + 55, 0, 0));
+        H1.setPixelColor(i, H1.Color(255, 0, 0));
       };
     }   
     else if(mainLedGlowType == 2) {
       for(int i=0; i < H1_numOfLeds; i++) {
-        H1.setPixelColor(i, H1.Color(0, (mainLedBrightness * 50) + 55, 0));
+        H1.setPixelColor(i, H1.Color(0, 255, 0));
       };
     }  
     else if(mainLedGlowType == 3) {
       for(int i=0; i < H1_numOfLeds; i++) {
-        H1.setPixelColor(i, H1.Color(0, 0, (mainLedBrightness * 50) + 55));
+        H1.setPixelColor(i, H1.Color(0, 0, 255));
       };
     }  
     else if(mainLedGlowType == 4) {
       for(int i=0; i < H1_numOfLeds; i++) {
-        H1.setPixelColor(i, H1.Color((mainLedBrightness * 50) + 55, (mainLedBrightness * 50) + 55, 0));
+        H1.setPixelColor(i, H1.Color(255, 255, 0));
       };
     } 
     H1.show();
@@ -606,7 +628,7 @@ void loop() {
   
   // Hazard lights
   if(hazardLights || leftSignal || rightSignal) {
-    frontLedAnimationCounter = 0; backLedAnimationCounter = 0;
+    frontLedAnimationCounter = 0; backLedAnimationCounter = 0; xH2 = 0; xH3 = 0; H2.setBrightness(255); H3.setBrightness(255);
   }    
   if(hazardLights) {    
     if(millis() - turnSignalAnimationCounter < 200) {
@@ -662,10 +684,11 @@ void loop() {
   
 
   if(frontLedOn && !rightSignal && !leftSignal && !hazardLights) {
+    H2.setBrightness((frontLedBrightness * 50) + 55);
     // Animation 1
     if(frontLedGlowType == 0) {
       for(int i=0; i < H2_numOfLeds; i++) {
-        H2.setPixelColor(i, H2.Color((frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55));
+        H2.setPixelColor(i, H2.Color(255, 255, 255));
       };
     }
     // Animation 2
@@ -683,13 +706,11 @@ void loop() {
       // Same but uses less program memory
       if(millis() - frontLedAnimationCounter >= 500 && millis() - frontLedAnimationCounter <= 1000) {
         for(int i=0; i < H2_numOfLeds; i++) {
-           H2.setPixelColor(i, H2.Color((frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55));
+           H2.setPixelColor(i, H2.Color(255, 255, 255));
         }
       }
       if(millis() - frontLedAnimationCounter >= 1000) {
-        for(int i=0; i < H2_numOfLeds; i++) {
-           H2.setPixelColor(i, H2.Color(0, 0, 0));
-        }
+        H2.clear();
         frontLedAnimationCounter = millis();
       }
     }
@@ -697,7 +718,7 @@ void loop() {
       if(xH2 < H2_numOfLeds*2) {
         if(millis() - frontLedAnimationCounter > xH2 * 100) {
           if(xH2 < H2_numOfLeds) {
-            H2.setPixelColor(xH2, H2.Color((frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55));
+            H2.setPixelColor(xH2, H2.Color(255, 255, 255));
           } 
           else {
             H2.setPixelColor(xH2 - H2_numOfLeds, H2.Color(0, 0, 0));
@@ -708,7 +729,7 @@ void loop() {
       else {
         if(millis() - frontLedAnimationCounter > (xH2 - H2_numOfLeds*2) * 100) {
           if((xH2 - H2_numOfLeds*2) < H2_numOfLeds) {
-            H2.setPixelColor(H2_numOfLeds - (xH2 - H2_numOfLeds*2), H2.Color((frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55, (frontLedBrightness * 50) + 55));
+            H2.setPixelColor(H2_numOfLeds - (xH2 - H2_numOfLeds*2), H2.Color(255, 255, 255));
           } 
           else {
             H2.setPixelColor(H2_numOfLeds - (xH2 - H2_numOfLeds*2) - H2_numOfLeds, H2.Color(0, 0, 0));
@@ -731,17 +752,18 @@ void loop() {
   
   
   if(backLedOn && !rightSignal && !leftSignal && !hazardLights) {
+    H3.setBrightness((backLedBrightness * 50) + 55);
     // Animation 1    
     if(backLedGlowType == 0) {
       for(int i=0; i < H3_numOfLeds; i++) {
-        H3.setPixelColor(i, H3.Color((frontLedBrightness * 50) + 55, 0, 0));
+        H3.setPixelColor(i, H3.Color(255, 0, 0));
       };
     }
     // Animation 2    
     else if (backLedGlowType == 1) {
       if(millis() - backLedAnimationCounter >= 500 && millis() - backLedAnimationCounter < 1000) {
         for(int i=0; i < H3_numOfLeds; i++) {
-           H3.setPixelColor(i, H3.Color((backLedBrightness * 50) + 55, 0, 0));
+           H3.setPixelColor(i, H3.Color(255, 0, 0));
         }
       };
       if(millis() - backLedAnimationCounter >= 1000) {
@@ -754,13 +776,13 @@ void loop() {
     // Animation 3
     else if (backLedGlowType == 2) {
       if(millis() - backLedAnimationCounter >= 300 && millis() - backLedAnimationCounter < 400) {
-        H3.setPixelColor(H3_numOfLeds * xH3, H3.Color((backLedBrightness * 50) + 55, 0, 0));
+        H3.setPixelColor(H3_numOfLeds * xH3, H3.Color(255, 0, 0));
       };
       if(millis() - backLedAnimationCounter >= 400 && millis() - backLedAnimationCounter < 500) {
         H3.setPixelColor(H3_numOfLeds * xH3, H3.Color(0, 0, 0));
       };
       if(millis() - backLedAnimationCounter >= 500 && millis() - backLedAnimationCounter < 600) {
-        H3.setPixelColor(H3_numOfLeds * xH3, H3.Color((backLedBrightness * 50) + 55, 0, 0));
+        H3.setPixelColor(H3_numOfLeds * xH3, H3.Color(255, 0, 0));
       };
       if(millis() - backLedAnimationCounter >= 600) {
         H3.setPixelColor(H3_numOfLeds * xH3, H3.Color(0, 0, 0));
@@ -773,6 +795,6 @@ void loop() {
   }
   else if(!hazardLights && !leftSignal && !rightSignal) H3.clear();
 
-  // --> Front LED glowing types <-- 
+  // --> Back LED glowing types <-- 
 
 }
