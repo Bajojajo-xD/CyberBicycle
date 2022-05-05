@@ -30,22 +30,22 @@ int readFromEEPROM(int address)
 int
 circMetric = 2148, // Wheel circumference (in milimeters)
 speedRefreshFrequency = 500, // How often refresh speed on LCD (in miliseconds)
-autoLightsRefreshFrequency = 5000; // How often refresh sensors info and change LEDs brightness and mode
+autoLightsRefreshFrequency = 5000, // How often refresh sensors info and change LEDs brightness and mode
+
+S11_onOffBtn = 16753245, S11_menu = 16769565, 
+S11_testBtn = 16720605, S11_plusBtn = 16712445, S11_backBtn = 16761405, 
+S11_prevBtn = 16769055, S11_startStopBtn = 16754775, S11_nextBtn = 16748655, 
+S11_0btn = 16738455, S11_minusBtn = 16750695, S11_clearBtn = 16756815, 
+S11_1btn = 16724175, S11_2btn = 16718055, S11_3btn = 16743045,
+S11_4btn = 16716015, S11_5btn = 16726215, S11_6btn = 16734885,
+S11_7btn = 16728765, S11_8btn = 16730805, S11_9btn = 16732845;
+// IR remote buttons, !! RUN "IR-check" to get values !!
 
 char 
-S7_address[8] = {0x28, 0xB1, 0x6D, 0xA1, 0x3, 0x0, 0x0, 0x11}, // Temperature sensor address, !! RUN "TemperatureSensor-scan" to get it !!
+S7_address[8] = {0x28, 0xE8, 0x15, 0x48, 0xF6, 0x30, 0x3C, 0xA8}, // Temperature sensor address, !! RUN "TemperatureSensor-scan" to get it !!
 
 F1_address = 0x3C,   // OLED Screen address, !! RUN "I2C-scan" to get your address !!
-F2_address = 0x27,   // LCD Screen address, !! RUN "I2C-scan" to get your address !!
-
-S11_onOffBtn, //;S11_menu = , 
-//S11_testBtn = , S11_plusBtn = , S11_backBtn = , 
-//S11_prevBtn = , S11_startStopBtn = , S11_nextBtn = , 
-S11_0btn; //S11_minusBtn = , S11_clearBtn = , 
-//S11_1btn = , S11_2btn = , S11_3btn = ,
-//S11_4btn = , S11_5btn = , S11_6btn = ,
-//S11_7btn = , S11_8btn = , S11_9btn = ,
-// IR remote buttons, !! RUN "IR-check" to get values !!
+F2_address = 0x27;   // LCD Screen address, !! RUN "I2C-scan" to get your address !!
 
 // --> Settings <--
 
@@ -174,9 +174,6 @@ chargerActive = false,
 mainLedOn = false, backLedOn = false, frontLedOn = false, 
 leftSignal = false, rightSignal = false, hazardLights = false,
 turnSignals = true, autoLights = true;
-
-char
-S11_lastBtn;
 
 //Display info on F1
 void F1Refresh() {
@@ -454,7 +451,7 @@ void loop() {
     if(digitalRead(S1) != S1_lastState) {
       S1_lastState = digitalRead(S1);
       if(digitalRead(S1) == HIGH) {
-        // Turn turn signals and braking led on/off
+        // Turn turn signals on/off
         if(turnSignals) {
           turnSignals = false; 
         }
@@ -549,21 +546,18 @@ void loop() {
   
   
   if(S11.decode(&S11_results)) { // Decode
-    if(S11_results.value != S11_lastBtn) { // If it's not just hold
-      if(S11_results.value == S11_onOffBtn) {
-        // Turn main led on/off
-        if(mainLedOn) {
-          mainLedOn = false; 
-        }
-        else mainLedBrightness = 2; mainLedGlowType = 0; mainLedOn = true; xH1 = 0; mainLedAnimationCounter = millis();        
+    if(S11_results.value == S11_onOffBtn) {
+      // Turn main led on/off
+      if(mainLedOn) {
+        mainLedOn = false; 
       }
-      else if (S11_results.value == S11_0btn) {
-        mainLedGlowType = 0; xH1 = 0; mainLedAnimationCounter = millis();        
-      }
-      F1Refresh();
+      else mainLedBrightness = 2; mainLedGlowType = 0; mainLedOn = true; xH1 = 0; mainLedAnimationCounter = millis();        
     }
+    else if (S11_results.value == S11_0btn) {
+      mainLedGlowType = 0; xH1 = 0; mainLedAnimationCounter = millis();        
+    }
+    F1Refresh();
     S11.resume();
-    S11_lastBtn = S11_results.value;
   }
   // --> IR receiver <--
 
