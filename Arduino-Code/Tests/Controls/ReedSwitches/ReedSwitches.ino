@@ -17,19 +17,19 @@ void loop() {
   if(digitalRead(S8) != S8_lastState) {
     S8_lastState = digitalRead(S8);
     if(digitalRead(S8) != HIGH) {
-      Serial.print("Reed switch S8 detected!");
+      Serial.print("Reed switch S8 detected!\n");
     };
   };
   if(digitalRead(S9) != S9_lastState) {
     S9_lastState = digitalRead(S9);
     if(digitalRead(S9) != HIGH) {
-      Serial.print("Reed switch S9 detected!");
+      Serial.print("Reed switch S9 detected!\n");
     };
   };
   if(digitalRead(S10) != S10_lastState) {
     S10_lastState = digitalRead(S10);
     if(digitalRead(S10) != HIGH) {
-      Serial.print("Reed switch S10 detected!");
+      Serial.print("Reed switch S10 detected!\n");
     };
   };
 }
