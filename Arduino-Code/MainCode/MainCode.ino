@@ -30,8 +30,9 @@ int readFromEEPROM(int address)
 int
 circMetric = 2148, // Wheel circumference (in milimeters)
 speedRefreshFrequency = 500, // How often refresh speed on LCD (in miliseconds)
-autoLightsRefreshFrequency = 5000, // How often refresh sensors info and change LEDs brightness and mode
+autoLightsRefreshFrequency = 5000; // How often refresh sensors info and change LEDs brightness and mode
 
+long
 S11_onOffBtn = 16753245, S11_menuBtn = 16769565, 
 S11_testBtn = 16720605, S11_plusBtn = 16712445, S11_backBtn = 16761405, 
 S11_prevBtn = 16769055, S11_startStopBtn = 16754775, S11_nextBtn = 16748655, 

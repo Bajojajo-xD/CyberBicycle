@@ -5,7 +5,7 @@
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
-int
+long
 S11_onOffBtn = 16753245, S11_menuBtn = 16769565, 
 S11_testBtn = 16720605, S11_plusBtn = 16712445, S11_backBtn = 16761405, 
 S11_prevBtn = 16769055, S11_startStopBtn = 16754775, S11_nextBtn = 16748655, 
@@ -27,77 +27,77 @@ void loop() {
   if (irrecv.decode(&results)) {
     if(results.value == S11_onOffBtn) {
       if(on){
-        Serial.print("Turning off");
-        on = false;    
+        Serial.print("Turning off\n");
+        on = false; 
       }  
       else {
-        Serial.print("Turning on");
+        Serial.print("Turning on\n");
         on = true;  
       }
     }
     else if (results.value == S11_menuBtn) {
-      Serial.print("Menu");      
+      Serial.print("Menu\n");      
     }
     else if (results.value == S11_testBtn) {
-      Serial.print("Test");      
+      Serial.print("Test\n");      
     }
     else if (results.value == S11_plusBtn) {
-      Serial.print("+");      
+      Serial.print("+\n");      
     }
     else if (results.value == S11_backBtn) {
-      Serial.print("Back");      
+      Serial.print("Back\n");      
     }
     else if (results.value == S11_prevBtn) {
-      Serial.print("Previous");      
+      Serial.print("Previous\n");      
     }
     else if (results.value == S11_startStopBtn) {
       if(start){
-        Serial.print("Stopped");
+        Serial.print("Stopped\n");
         start = false;    
       }  
       else {
-        Serial.print("Playing");
+        Serial.print("Playing\n");
         start = true;  
       }   
     }
     else if (results.value == S11_nextBtn) {
-      Serial.print("Next");      
+      Serial.print("Next\n");      
     }
     else if (results.value == S11_0btn) {
-      Serial.print("0");      
+      Serial.print("0\n");      
     }
     else if (results.value == S11_minusBtn) {
-      Serial.print("-");      
+      Serial.print("-\n");      
     }
     else if (results.value == S11_clearBtn) {
-      Serial.print("Clear");      
+      Serial.print("Clear\n");      
     }
     else if (results.value == S11_1btn) {
-      Serial.print("1");      
+      Serial.print("1\n");      
     }
     else if (results.value == S11_2btn) {
-      Serial.print("2");      
+      Serial.print("2\n");      
     }
     else if (results.value == S11_3btn) {
-      Serial.print("3");      
+      Serial.print("3\n");      
     }
     else if (results.value == S11_4btn) {
-      Serial.print("4");      
+      Serial.print("4\n");      
     }
     else if (results.value == S11_5btn) {
-      Serial.print("5");      
+      Serial.print("5\n");      
     }
     else if (results.value == S11_6btn) {
-      Serial.print("6");      
+      Serial.print("6\n");      
     }
     else if (results.value == S11_7btn) {
-      Serial.print("7");      
+      Serial.print("7\n");      
     }
     else if (results.value == S11_8btn) {
-      Serial.print("8");      
+      Serial.print("8\n");      
     }
     else if (results.value == S11_9btn) {
-      Serial.print("9");      
+      Serial.print("9\n");      
     };
     irrecv.resume(); // Receive the next value
   }
