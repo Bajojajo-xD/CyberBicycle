@@ -20,7 +20,7 @@ RtcDS1302<ThreeWire> Rtc(RTC1_wires);
 
 void setup () 
 {
-    Serial.begin(57600);
+    Serial.begin(9600);
 
     Serial.print("compiled: ");
     Serial.print(__DATE__);
