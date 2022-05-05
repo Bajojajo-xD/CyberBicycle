@@ -10,9 +10,10 @@
 #include <RtcDS1302.h>
 
 // Set wires
+int
 RTC1_DAT = 12,     // IO
 RTC1_CLK = 13,     // SCLK
-RTC1_RST = 11,     // CE
+RTC1_RST = 11;     // CE
 
 ThreeWire RTC1_wires(RTC1_DAT,RTC1_CLK,RTC1_RST);      
 RtcDS1302<ThreeWire> Rtc(RTC1_wires);
