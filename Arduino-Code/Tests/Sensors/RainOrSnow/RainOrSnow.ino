@@ -9,7 +9,7 @@ void setup() {
 }
 
 void loop() {
-  char rainlevel = analogRead(S6)/10.23;
-  Serial.print(rainlevel); Serial.print("%");
+  float rainlevel = (1023-analogRead(S6))/10.23;
+  Serial.print(rainlevel); Serial.print("%\n");
   delay(1000);
 }

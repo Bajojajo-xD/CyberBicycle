@@ -568,13 +568,13 @@ void loop() {
   if(autoLights && millis() - autoLightsRefreshCounter >= autoLightsRefreshFrequency) { // Delay
     autoLightsRefreshCounter = millis();
     lightLevel = (1023-analogRead(S5))/10.23; // Check light level (in %)
-    rainLevel = analogRead(S6)/10.23;         // Check rain/snow level (in %)
+    rainLevel = (1023-analogRead(S6))/10.23;         // Check rain/snow level (in %)
     // It's dark
-    if(lightLevel < 10) {
+    if(lightLevel < 25) {
       frontLedOn = true; backLedOn = true; frontLedBrightness = 4; backLedBrightness = 4; frontLedGlowType = 0; backLedGlowType = 0;    
     }
     // It's a little dark or it's raining
-    else if(lightLevel < 60 || rainLevel > 5) {
+    else if(lightLevel < 60 || rainLevel > 30) {
       frontLedOn = true; backLedOn = true; frontLedBrightness = 2; backLedBrightness = 2; frontLedGlowType = 1; backLedGlowType = 1;     
     }
     // It's light and not raining

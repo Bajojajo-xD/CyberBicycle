@@ -9,7 +9,7 @@ void setup() {
 }
 
 void loop() {
-  char lightLevel = (1023-analogRead(S5))/10.23;
-  Serial.print(lightLevel); Serial.print("%");
+  float lightLevel = (1023-analogRead(S5))/10.23;
+  Serial.print(lightLevel); Serial.print("%\n");
   delay(1000);
 }
