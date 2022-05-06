@@ -8,7 +8,6 @@ void setup()
 
 void loop() {
   digitalWrite(Y1, HIGH); 
-  Serial.print("Relay on");  
   Serial.print("Relay on\n");
   delay(5000);
   digitalWrite(Y1, LOW); 
