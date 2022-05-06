@@ -61,8 +61,7 @@ S4 = 6,    // Button 4
 S7_pin = 7,// Temperature sensor
 S8 = 8,    // Reed switch - wheel
 S9 = 9,    // Reed switch - left
-S10 = 10;  // Reed switch - right
-char
+S10 = 10,  // Reed switch - right
 Y1 = A0,     // Relay
 S11_pin = A1,// IR receiver
 VD1 = A2,    // Voltage check
@@ -214,11 +213,12 @@ void loop() {
   else chargeLevel = 5;
   // --> Check accumulator voltage level <--   
 
-  // ! <-- Update RTC --> !
+  // ! <-- Update RTC and temp --> !
 
 
   RTC1.updateTime();  
-  // --> Update RTC <-- 
+  S7.requestTemperatures();
+  // --> Update RTC and temp <-- 
 
   // ! <-- Wheel rotate detect, calculate and refresh speed --> !
 

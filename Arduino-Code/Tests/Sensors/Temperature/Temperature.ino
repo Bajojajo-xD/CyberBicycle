@@ -22,12 +22,13 @@ void setup() {
 
   Serial.begin(9600);
   S7.begin();   // Init S7 (Temp sensor)
-  S7.setResolution(9);
+  S7.setResolution(12);
   // --> Devices and pins init <--
 
 }
 
 void loop() {
-  Serial.print(S7.getTempCByIndex(0)); Serial.print("°C\n");
+  S7.requestTemperatures();
+  Serial.print(int(S7.getTempCByIndex(0))); Serial.print("ºC\n");
   delay(1000);
 }
