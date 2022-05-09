@@ -4,7 +4,7 @@
 It's **not recommended** to create **your own DIY** project heavily **based on** this project **yet**.
 
 ## 🛠️ Now **working** on: 
-* Construction of the accumulator: *waiting for 2nd transformer delivery, so accumulator can be recharged.*
+* Construction of the accumulator: *waiting for 2nd transformer delivery, so accumulator can be recharged; something is wrong with 1 cell, during night it discharged :v.*
 * Bicycle frame filling: *waiting for plexiglass and plasti dip deliveries.*
 * Rear bicycle fender frame: *waiting for metal rod delivery.*
 
