@@ -4,9 +4,11 @@
 It's **not recommended** to create **your own DIY** project heavily **based on** this project **yet**.
 
 ## 🛠️ Now **working** on: 
-* Construction of the accumulator: *waiting for 2nd transformer delivery, so accumulator can be recharged; something is wrong with 1 cell, during night it discharged :v.*
-* Bicycle frame filling: *waiting for plexiglass and plasti dip deliveries.*
-* Rear bicycle fender frame: *waiting for metal rod delivery.*
+* Construction of the accumulator: *BMS wasn't working as expected, so after complaint next one will come soon; working on 3D model to hide all parts into*
+* Bicycle frame filling: *parts ready, no time at all, I'll work on it soon*
+* Rear bicycle fender frame: *parts ready, no time at all, I'll work on it soon*
+* Electronics testing: *almost everything except reed switches tested*
+* Code testing: *no time at all, I'll work on it soon*
 
 # 📚 Informations
 ## What is it?
